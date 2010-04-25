@@ -4,8 +4,8 @@
 #include "algebra3.h"
 
 class Sampler {
-  int pixel_x;
-  int pixel_y;
+  int pixels_x;
+  int pixels_y;
   int samplings;      // each pixel will have samplings^2 samples spread
                       // uniformaly throughout the "square".
   double x_epsilon;   // offset in x within a pixel.
@@ -20,10 +20,11 @@ class Sampler {
   int y_pixel_count;
 
  public:
-  Sampler(int pixel_x, int pixel_y, int samplings);
+  Sampler();
+  Sampler(int pixels_x, int pixels_y, int samplings);
   ~Sampler();
   bool getSample(vec2& sample);
+  void debugmsg();
 };
-
 
 #endif
