@@ -1,3 +1,6 @@
+#include <fstream>
+#include <sstream>
+#include <stdio.h>
 #include "algebra3.h"
 #include "Sampler.h"
 #include "Camera.h"
@@ -5,13 +8,130 @@
 #include "bmp/EasyBMP.h"
 #include "Sphere.h"
 
-#include <stdio.h>
-/*  Dedicated to running the milestone  */
+#define DEFAULT_SAMPLINGS 1
+#define DEFAULT_OUTPUT_FILE_NAME "raytrace.txt"
+
+class Scene {
+  Sampler sampler;
+  Camera camera;
+
+  int width;
+  int height;
+  string outputfilename;
+
+  void setSampler(int width, int height, int samplings);
+  void setCamera(vec3 lookfrom, vec3 lookat, vec3 up, float fov);
+  void parseScene(const char* inputfilename);
+  bool parseCommand(string line);
+
+public:
+  Scene() {};
+  ~Scene() {};
+  void bootstrap(const char* inputfilename);
+  void outputToFile();
+  void debugmsg();
+};
+
+void Scene::setSampler(int width, int height, int samplings) {
+  this->width = width;
+  this->height = height;
+  sampler = Sampler(width, height, samplings);
+}
+
+void Scene::setCamera(vec3 lookfrom, vec3 lookat, vec3 up, float fov) {
+  camera = Camera(lookfrom, lookat, up, fov, width/(float)height, 1.0, 10.0);
+}
+
+void Scene::parseScene(const char* inputfilename) {
+  ifstream inputfile(inputfilename);
+  if (!inputfile) {
+    printf("ERROR: failed to open file %s\n", inputfilename);
+    exit(1);
+  }
+  const int linesize = 256;
+  char line[linesize];
+  int linecount = 1;
+  while (inputfile.good()) {
+    inputfile.getline(line, linesize);
+    if (!parseCommand(string(line))) {
+      printf("ERROR: invalid command at line %d\n", linecount);
+      exit(1);
+    }
+    linecount++;
+  }
+  inputfile.close();
+}
+
+bool Scene::parseCommand(string line) {
+  if (line.empty()) {
+    return true;
+  }
+  string op;
+  stringstream ss(stringstream::in | stringstream::out);
+  ss.str(line);
+  ss >> op;
+  if (op == "#") {  // comment
+    return true;
+  } else if (op == "size") {
+    int width, height;
+    ss >> width >> height;
+    setSampler(width, height, DEFAULT_SAMPLINGS);
+  } else if (op == "camera") {
+    float lookfromx, lookfromy, lookfromz, lookatx, lookaty, lookatz, upx, upy, upz, fov;
+    ss >> lookfromx >> lookfromy >> lookfromz >> lookatx >> lookaty >> lookatz >> upx >> upy >> upz >> fov;
+    setCamera(vec3(lookfromx, lookfromy, lookfromz), vec3(lookatx, lookaty, lookatz), vec3(upx, upy, upz), fov);
+  } else if (op == "output") {
+    ss >> outputfilename;
+  } else {
+    return false;  // unknown command
+  }
+  return true;
+}
+
+
+void Scene::bootstrap(const char* inputfilename) {
+  outputfilename = DEFAULT_OUTPUT_FILE_NAME;
+  parseScene(inputfilename);
+}
+
+void Scene::outputToFile() {
+  ofstream outputfile(outputfilename.c_str());
+  outputfile.write("testing output data", 20);
+  outputfile.close();
+}
+
+void Scene::debugmsg() {
+  printf("Scene.sampler: {\n");
+  sampler.debugmsg();
+  printf("}\n");
+  printf("Scene.camera: {\n");
+  camera.debugmsg();
+  printf("}\n");
+}
+
+
+
+
+
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    printf("usage: raytracer inputfile\n");
+    exit(1);
+  }
+  Scene scene;
+  scene.bootstrap(argv[1]);  // bootstrap by parsing inputfile
+  scene.outputToFile();
+
+  //scene.debugmsg();
+}
+
+
+/*
 void milestone() {
-  int size_x = 800;
-  int size_y = 600;
-  vec3 cam_lookfrom(0.0, 0.0, 4.0);
-  vec3 cam_lookat(1.0, 0.0, -1.0);
+  int size_x = 640;
+  int size_y = 480;
+  vec3 cam_lookfrom(0.0, 0.0, 10.0);
+  vec3 cam_lookat(0.0, 0.0, -1.0);
   vec3 cam_up(0.0, 1.0, 0.0);
   float fov = 60.0;
 
@@ -57,7 +177,4 @@ void milestone() {
   free(red);
   free(black);
 }
-
-int main(int argc, char** argv) {
-  milestone();
-}
+*/

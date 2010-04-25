@@ -25,7 +25,7 @@ class Camera {
   ~Camera();
   void generateRay(vec2 sample, vec3& ray);
   vec3 position();
+  void debugmsg();
 };
-
 
 #endif

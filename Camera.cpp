@@ -1,6 +1,9 @@
 #include "Camera.h"
 #include <math.h>
 
+Camera::Camera() {
+}
+
 Camera::Camera(vec3 look_from, vec3 look_at, vec3 up,
                float field_of_view, float aspect_ratio,
                float z_near, float z_far) {
@@ -30,4 +33,11 @@ void Camera::generateRay(vec2 sample, vec3& ray) {
 
 vec3 Camera::position() {
   return look_from;
+}
+
+#include <stdio.h>
+void Camera::debugmsg() {
+  printf("Camera.lookfrom: <%.2f, %.2f, %.2f>\n", look_from[0], look_from[1], look_from[2]);
+  printf("Camera.lookat:   <%.2f, %.2f, %.2f>\n", look_at[0], look_at[1], look_at[2]);
+  printf("Camera.up:       <%.2f, %.2f, %.2f>\n", up[0], up[1], up[2]);
 }
