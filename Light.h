@@ -8,7 +8,7 @@ class Light
 {
 public:
 	bool directional;
-	vec3 pos;
+	vec4 pos;
 	Color color;
 	vec3 attn;
 	Light();

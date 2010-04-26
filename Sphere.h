@@ -8,14 +8,14 @@
 class Sphere : public Primitive
 {
 private:
-	vec3 center;
+	vec4 center;
 	double radius;
 
 public:
 	void setRadius(float newRadius);
-	void setCenter(vec3 newCenter);
-	virtual bool intersect(vec3 p0, vec3 p1, double *t, double maxDistance);
-	virtual vec3 getNormal(vec3 point);
+	void setCenter(vec4 newCenter);
+	virtual bool intersect(vec4 p0, vec4 p1, double *t, double maxDistance);
+	virtual vec4 getNormal(vec4 point);
 	Sphere();
 	~Sphere();
 };

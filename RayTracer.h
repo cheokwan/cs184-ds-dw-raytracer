@@ -17,8 +17,8 @@ public:
 	vector<Primitive*> primitives;
 	vector<Light*> lights;
 	Color globalAmbient;
-	void trace(vec3 p0, vec3 p1, double depth, Color *color);
-	bool visible(vec3 p, Light *l);
+	void trace(int reflects, vec4 p0, vec4 p1, double depth, Color *color);
+	bool visible(vec4 p, Light *l);
 	Raytracer();
 	~Raytracer();
 };
