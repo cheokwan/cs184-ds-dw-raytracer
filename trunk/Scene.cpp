@@ -14,12 +14,13 @@
 #define DEFAULT_OUTPUT_FILE_NAME "raytrace.txt"
 
 class Scene {
-  Sampler sampler;
-  Camera camera;
-  Film film;
+  Sampler* sampler;
+  Camera* camera;
+  Film* film;
 
   int width;
   int height;
+  int samplings;
   int tracedepth;
   string outputfilename;
 
@@ -28,7 +29,7 @@ class Scene {
 
 public:
   Scene();
-  ~Scene() {};
+  ~Scene();
   void bootstrap(const char* inputfilename);
   void render();
   void outputImage();
@@ -36,8 +37,15 @@ public:
 };
 
 Scene::Scene() {
+  samplings = DEFAULT_SAMPLINGS;
   tracedepth = DEFAULT_TRACE_DEPTH;
   outputfilename = DEFAULT_OUTPUT_FILE_NAME;
+}
+
+Scene::~Scene() {
+  delete sampler;
+  delete camera;
+  delete film;
 }
 
 void Scene::parseScene(const char* inputfilename) {
@@ -71,18 +79,18 @@ bool Scene::parseCommand(string line) {
   if (op == "#") {  // comment
     return true;
   } else if (op == "size") {
-    ss >> width >> height;
-    sampler = Sampler(width, height, DEFAULT_SAMPLINGS);
-    film = Film(width, height, DEFAULT_SAMPLINGS);
-  } else if (op == "camera") {
-    float lookfromx, lookfromy, lookfromz, lookatx, lookaty, lookatz, upx, upy, upz, fov;
-    ss >> lookfromx >> lookfromy >> lookfromz >> lookatx >> lookaty >> lookatz >> upx >> upy >> upz >> fov;
-    camera = Camera(vec3(lookfromx, lookfromy, lookfromz), vec3(lookatx, lookaty, lookatz), vec3(upx, upy, upz),
-                    fov, width/(float)height, 1.0, 10.0);
+    ss >> width >> height >> samplings;
+    sampler = new Sampler(width, height, samplings);
+    film = new Film(width, height, samplings*samplings); // samplings^2 samples per pixel
   } else if (op == "maxdepth") {
     ss >> tracedepth;
   } else if (op == "output") {
     ss >> outputfilename;
+  } else if (op == "camera") {
+    float lookfromx, lookfromy, lookfromz, lookatx, lookaty, lookatz, upx, upy, upz, fov;
+    ss >> lookfromx >> lookfromy >> lookfromz >> lookatx >> lookaty >> lookatz >> upx >> upy >> upz >> fov;
+    camera = new Camera(vec3(lookfromx, lookfromy, lookfromz), vec3(lookatx, lookaty, lookatz), vec3(upx, upy, upz),
+                        fov, width/(float)height, 1.0, 10.0);
   } else {
     return false;  // unknown command
   }
@@ -95,6 +103,12 @@ void Scene::bootstrap(const char* inputfilename) {
 }
 
 void Scene::render() {
+  vec2 sample;
+  vec3 ray;
+  while (sampler->getSample(sample)) {
+    camera->generateRay(sample, ray);
+    
+  }
 }
 
 void Scene::outputImage() {
@@ -105,10 +119,10 @@ void Scene::outputImage() {
 
 void Scene::debugmsg() {
   printf("Scene.sampler: {\n");
-  sampler.debugmsg();
+  sampler->debugmsg();
   printf("}\n");
   printf("Scene.camera: {\n");
-  camera.debugmsg();
+  camera->debugmsg();
   printf("}\n");
 }
 
@@ -124,8 +138,7 @@ int main(int argc, char** argv) {
   Scene scene;
   scene.bootstrap(argv[1]);  // bootstrap by parsing inputfile
   scene.outputImage();
-
-  //scene.debugmsg();
+  scene.debugmsg();
 }
 
 
