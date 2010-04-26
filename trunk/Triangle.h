@@ -8,22 +8,22 @@
 class Triangle : public Primitive
 {
 private:
-	vec3 vertexA;
-	vec3 vertexB;
-	vec3 vertexC;
+	vec4 vertexA;
+	vec4 vertexB;
+	vec4 vertexC;
 	bool interpolateNormal;
-	vec3 normalA;
-	vec3 normalB;
-	vec3 normalC;
+	vec4 normalA;
+	vec4 normalB;
+	vec4 normalC;
 
 
 public:
-	virtual bool intersect(vec3 p0, vec3 p1, double *t, double maxDistance);
-	virtual vec3 getNormal(vec3 point);
-	void setVertex(vec3 newVertexA, vec3 newVertexB, vec3 newVertexC);
-	void setNormal(vec3 newNormal, vec3 newNormalB, vec3 newNormalC);
+	virtual bool intersect(vec4 p0, vec4 p1, double *t, double maxDistance);
+	virtual vec4 getNormal(vec4 point);
+	void setVertex(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC);
+	void setNormal(vec4 newNormal, vec4 newNormalB, vec4 newNormalC);
 	Triangle();
-	Triangle(vec3 newNormalA, vec3 newNormalB, vec3 newNormalC);
+	Triangle(vec4 newNormalA, vec4 newNormalB, vec4 newNormalC);
 	~Triangle();
 };
 

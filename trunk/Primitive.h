@@ -6,11 +6,12 @@
 class Primitive
 {
 public:
-	virtual bool intersect(vec3 p0, vec3 p1, double *t, double maxDistance) = 0;
-	virtual vec3 getNormal(vec3 point) = 0;
+	virtual bool intersect(vec4 p0, vec4 p1, double *t, double maxDistance) = 0;
+	virtual vec4 getNormal(vec4 point) = 0;
 	Color kd;
 	Color ks;
 	Color ke;
+	Color kr;
 	double sp;
 };
 
