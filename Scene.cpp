@@ -4,42 +4,40 @@
 #include "algebra3.h"
 #include "Sampler.h"
 #include "Camera.h"
+#include "Film.h"
 
 #include "bmp/EasyBMP.h"
 #include "Sphere.h"
 
 #define DEFAULT_SAMPLINGS 1
+#define DEFAULT_TRACE_DEPTH 5
 #define DEFAULT_OUTPUT_FILE_NAME "raytrace.txt"
 
 class Scene {
   Sampler sampler;
   Camera camera;
+  Film film;
 
   int width;
   int height;
+  int tracedepth;
   string outputfilename;
 
-  void setSampler(int width, int height, int samplings);
-  void setCamera(vec3 lookfrom, vec3 lookat, vec3 up, float fov);
   void parseScene(const char* inputfilename);
   bool parseCommand(string line);
 
 public:
-  Scene() {};
+  Scene();
   ~Scene() {};
   void bootstrap(const char* inputfilename);
-  void outputToFile();
+  void render();
+  void outputImage();
   void debugmsg();
 };
 
-void Scene::setSampler(int width, int height, int samplings) {
-  this->width = width;
-  this->height = height;
-  sampler = Sampler(width, height, samplings);
-}
-
-void Scene::setCamera(vec3 lookfrom, vec3 lookat, vec3 up, float fov) {
-  camera = Camera(lookfrom, lookat, up, fov, width/(float)height, 1.0, 10.0);
+Scene::Scene() {
+  tracedepth = DEFAULT_TRACE_DEPTH;
+  outputfilename = DEFAULT_OUTPUT_FILE_NAME;
 }
 
 void Scene::parseScene(const char* inputfilename) {
@@ -73,13 +71,16 @@ bool Scene::parseCommand(string line) {
   if (op == "#") {  // comment
     return true;
   } else if (op == "size") {
-    int width, height;
     ss >> width >> height;
-    setSampler(width, height, DEFAULT_SAMPLINGS);
+    sampler = Sampler(width, height, DEFAULT_SAMPLINGS);
+    film = Film(width, height, DEFAULT_SAMPLINGS);
   } else if (op == "camera") {
     float lookfromx, lookfromy, lookfromz, lookatx, lookaty, lookatz, upx, upy, upz, fov;
     ss >> lookfromx >> lookfromy >> lookfromz >> lookatx >> lookaty >> lookatz >> upx >> upy >> upz >> fov;
-    setCamera(vec3(lookfromx, lookfromy, lookfromz), vec3(lookatx, lookaty, lookatz), vec3(upx, upy, upz), fov);
+    camera = Camera(vec3(lookfromx, lookfromy, lookfromz), vec3(lookatx, lookaty, lookatz), vec3(upx, upy, upz),
+                    fov, width/(float)height, 1.0, 10.0);
+  } else if (op == "maxdepth") {
+    ss >> tracedepth;
   } else if (op == "output") {
     ss >> outputfilename;
   } else {
@@ -90,11 +91,13 @@ bool Scene::parseCommand(string line) {
 
 
 void Scene::bootstrap(const char* inputfilename) {
-  outputfilename = DEFAULT_OUTPUT_FILE_NAME;
   parseScene(inputfilename);
 }
 
-void Scene::outputToFile() {
+void Scene::render() {
+}
+
+void Scene::outputImage() {
   ofstream outputfile(outputfilename.c_str());
   outputfile.write("testing output data", 20);
   outputfile.close();
@@ -120,7 +123,7 @@ int main(int argc, char** argv) {
   }
   Scene scene;
   scene.bootstrap(argv[1]);  // bootstrap by parsing inputfile
-  scene.outputToFile();
+  scene.outputImage();
 
   //scene.debugmsg();
 }
