@@ -1,23 +1,21 @@
 #include "algebra3.h"
+#include "bmp/easyBMP.h"
+#include "Primitive.h"
 
 #ifndef _Sphere_h_
 #define _Sphere_h_
 
-class Sphere
+class Sphere : public Primitive
 {
 private:
 	vec3 center;
-	float radius;
-	float ka[3];
-	float kd[3];
-	float ks[3];
-	float kr[3];
-	float sp;
+	double radius;
 
 public:
 	void setRadius(float newRadius);
 	void setCenter(vec3 newCenter);
-	int intersect(vec3 p0, vec3 p1);
+	virtual bool intersect(vec3 p0, vec3 p1, double *t, double maxDistance);
+	virtual vec3 getNormal(vec3 point);
 	Sphere();
 	~Sphere();
 };
