@@ -23,7 +23,8 @@ public:
 	void setVertex(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC);
 	void setNormal(vec4 newNormal, vec4 newNormalB, vec4 newNormalC);
 	Triangle();
-	Triangle(vec4 newNormalA, vec4 newNormalB, vec4 newNormalC);
+	Triangle(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC, vec4 newNormalA, vec4 newNormalB, vec4 newNormalC, mat4 t);
+	Triangle(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC, mat4 t);
 	~Triangle();
 };
 
