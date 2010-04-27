@@ -18,21 +18,26 @@ Camera::Camera(vec3 look_from, vec3 look_at, vec3 up,
   look_dir = (look_at - look_from).normalize();
   right = (look_dir ^ up).normalize();
   up = (right ^ look_dir).normalize();
-  screen_x = aspect_ratio * tan(field_of_view) * z_near;
-  screen_y = tan(field_of_view) * z_near;
+  screen_x = tan(field_of_view) * z_near;
+  screen_y = aspect_ratio * screen_x;
 }
 
 Camera::~Camera() {
 }
 
-void Camera::generateRay(vec2 sample, vec3& ray) {
-  ray = (z_near * look_dir) +
-        (screen_x * sample[0] * right) +
-        (screen_y * sample[1] * up);
+void Camera::generateRay(vec2 sample, vec4& ray_ori, vec4& ray_dir) {
+  ray_ori = position();
+  ray_dir = (z_near * look_dir) +
+            (screen_x * sample[0] * right) +
+            (screen_y * sample[1] * up);
+  ray_dir[3] = 0;
+  ray_dir.normalize();
 }
 
-vec3 Camera::position() {
-  return look_from;
+vec4 Camera::position() {
+  vec4 pos(look_from);
+  pos[3] = 1;
+  return pos;
 }
 
 #include <stdio.h>

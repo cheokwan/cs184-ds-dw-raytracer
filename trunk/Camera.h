@@ -23,8 +23,8 @@ class Camera {
          float field_of_view, float aspect_ratio,
          float z_near, float z_far);
   ~Camera();
-  void generateRay(vec2 sample, vec3& ray);
-  vec3 position();
+  void generateRay(vec2 sample, vec4& ray_ori, vec4& ray_dir);
+  vec4 position();
   void debugmsg();
 };
 

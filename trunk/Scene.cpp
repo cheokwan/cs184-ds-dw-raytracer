@@ -1,22 +1,35 @@
 #include <fstream>
 #include <sstream>
+#include <stack>
 #include <stdio.h>
 #include "algebra3.h"
 #include "Sampler.h"
 #include "Camera.h"
 #include "Film.h"
-
-#include "bmp/EasyBMP.h"
+#include "Color.h"
 #include "Sphere.h"
+#include "bmp/EasyBMP.h"
+#include "util.h"
+
 
 #define DEFAULT_SAMPLINGS 1
 #define DEFAULT_TRACE_DEPTH 5
-#define DEFAULT_OUTPUT_FILE_NAME "raytrace.txt"
+#define DEFAULT_OUTPUT_FILE_NAME "raytrace.bmp"
 
 class Scene {
   Sampler* sampler;
   Camera* camera;
   Film* film;
+
+  stack<mat4> modelview;
+  mat4 toptransform;
+  vec4* verts;
+  vec4* vertnorm_verts;
+  vec4* vertnorm_norms;
+  int totalverts;
+  int totalvertnorms;
+  int currentvert;
+  int currentvertnorm;
 
   int width;
   int height;
@@ -40,12 +53,20 @@ Scene::Scene() {
   samplings = DEFAULT_SAMPLINGS;
   tracedepth = DEFAULT_TRACE_DEPTH;
   outputfilename = DEFAULT_OUTPUT_FILE_NAME;
+  toptransform = identity3D();
+  totalverts = 0;
+  totalvertnorms = 0;
+  currentvert = 0;
+  currentvertnorm = 0;
 }
 
 Scene::~Scene() {
   delete sampler;
   delete camera;
   delete film;
+  delete verts;
+  delete vertnorm_verts;
+  delete vertnorm_norms;
 }
 
 void Scene::parseScene(const char* inputfilename) {
@@ -78,25 +99,121 @@ bool Scene::parseCommand(string line) {
   ss >> op;
   if (op == "#") {  // comment
     return true;
-  } else if (op == "size") {
+  }
+  else if (op == "size") {
     ss >> width >> height >> samplings;
     sampler = new Sampler(width, height, samplings);
     film = new Film(width, height, samplings*samplings); // samplings^2 samples per pixel
-  } else if (op == "maxdepth") {
+  }
+  else if (op == "maxdepth") {
     ss >> tracedepth;
-  } else if (op == "output") {
+  }
+  else if (op == "output") {
     ss >> outputfilename;
-  } else if (op == "camera") {
-    float lookfromx, lookfromy, lookfromz, lookatx, lookaty, lookatz, upx, upy, upz, fov;
-    ss >> lookfromx >> lookfromy >> lookfromz >> lookatx >> lookaty >> lookatz >> upx >> upy >> upz >> fov;
-    camera = new Camera(vec3(lookfromx, lookfromy, lookfromz), vec3(lookatx, lookaty, lookatz), vec3(upx, upy, upz),
-                        fov, width/(float)height, 1.0, 10.0);
-  } else {
+  }
+  else if (op == "camera") {
+    vec3 lookfrom, lookat, up;
+    float fov;
+    ss >> lookfrom[0] >> lookfrom[1] >> lookfrom[2] >> lookat[0] >> lookat[1] >> lookat[2] >> up[0] >> up[1] >> up[2] >> fov;
+    camera = new Camera(lookfrom, lookat, up, fov, height/(float)width, 1.0, 10.0);
+  }
+  else if (op == "sphere") {
+  }
+  else if (op == "maxverts") {
+    ss >> totalverts;
+    verts = new vec4[totalverts];
+  }
+  else if (op == "maxvertnorms") {
+    ss >> totalvertnorms;
+    vertnorm_verts = new vec4[totalvertnorms];
+    vertnorm_norms = new vec4[totalvertnorms];
+  }
+  else if (op == "vertex") {
+    if (currentvert >= totalverts) {
+      return false;
+    }
+    vec3 vert;
+    ss >> vert[0] >> vert[1] >> vert[2];
+    vert[3] = 1;
+    verts[currentvert++] = vert;
+  }
+  else if (op == "vertexnormal") {
+    if (currentvertnorm >= totalvertnorms) {
+      return false;
+    }
+    vec3 vert, norm;
+    ss >> vert[0] >> vert[1] >> vert[2] >> norm[0] >> norm[1] >> norm[2];
+    vert[3] = 1;
+    norm[3] = 0;
+    vertnorm_verts[currentvertnorm] = vert;
+    vertnorm_norms[currentvertnorm++] = norm;
+  }
+  else if (op == "tri") {
+  }
+  else if (op == "trinormal") {
+  }
+  else if (op == "translate") {
+    vec3 tran;
+    ss >> tran[0] >> tran[1] >> tran[2];
+    toptransform = toptransform * translation3D(tran);
+
+    printf("translate, toptransform:\n");  // DEBUG
+    printMat(toptransform);                // DEBUG
+  }
+  else if (op == "rotate") {
+    vec3 axis;
+    float degree;
+    ss >> axis[0] >> axis[1] >> axis[2] >> degree;
+    toptransform = toptransform * rotation3D(axis, degree);
+
+    printf("rotate, toptransform:\n");  // DEBUG
+    printMat(toptransform);             // DEBUG
+  }
+  else if (op == "scale") {
+    vec3 scale;
+    ss >> scale[0] >> scale[1] >> scale[2];
+    toptransform = toptransform * scaling3D(scale);
+
+    printf("scale, toptransform:\n");  // DEBUG
+    printMat(toptransform);            // DEBUG
+  }
+  else if (op == "pushTransform") {
+    modelview.push(mat4(toptransform));
+
+    printf("pushTransform, modelview.top():\n");  // DEBUG
+    printMat(modelview.top());                    // DEBUG
+  }
+  else if (op == "popTransform") {
+    if (modelview.empty()) {
+      return false;
+    }
+    toptransform = modelview.top();
+    modelview.pop();
+
+    printf("popTransform, toptransform:\n");  // DEBUG
+    printMat(toptransform);                   // DEBUG
+  }
+  else if (op == "directional") {
+  }
+  else if (op == "point") {
+  }
+  else if (op == "attenuation") {
+  }
+  else if (op == "ambient") {
+  }
+  else if (op == "diffuse") {
+  }
+  else if (op == "specular") {
+  }
+  else if (op == "shininess") {
+  }
+  else if (op == "emission") {
+  }
+  else {
     return false;  // unknown command
   }
   return true;
 }
-
 
 void Scene::bootstrap(const char* inputfilename) {
   parseScene(inputfilename);
@@ -104,17 +221,34 @@ void Scene::bootstrap(const char* inputfilename) {
 
 void Scene::render() {
   vec2 sample;
-  vec3 ray;
+  vec4 ray_ori;
+  vec4 ray_dir;
+
+  // TESTING
+  Color red(1.0, 0.0, 0.0);
+  Color black(0.0, 0.0, 0.0);
+
+  Sphere sphere;
+  sphere.setRadius(2.0);
+  sphere.setCenter(vec3(0.0, 0.0, -16.0));
+
+  double t;
+  int count = 0;
+
   while (sampler->getSample(sample)) {
-    camera->generateRay(sample, ray);
-    
+    camera->generateRay(sample, ray_ori, ray_dir);
+    if (sphere.intersect(ray_ori, ray_dir, &t, 100.0)) {
+      film->commit(red);
+    }
+    else {
+      film->commit(black);
+    }
   }
 }
 
 void Scene::outputImage() {
-  ofstream outputfile(outputfilename.c_str());
-  outputfile.write("testing output data", 20);
-  outputfile.close();
+  BMP* image = film->generateImage();
+  image->WriteToFile(outputfilename.c_str());
 }
 
 void Scene::debugmsg() {
@@ -137,60 +271,7 @@ int main(int argc, char** argv) {
   }
   Scene scene;
   scene.bootstrap(argv[1]);  // bootstrap by parsing inputfile
+  scene.render();
   scene.outputImage();
-  scene.debugmsg();
+  //  scene.debugmsg();
 }
-
-
-/*
-void milestone() {
-  int size_x = 640;
-  int size_y = 480;
-  vec3 cam_lookfrom(0.0, 0.0, 10.0);
-  vec3 cam_lookat(0.0, 0.0, -1.0);
-  vec3 cam_up(0.0, 1.0, 0.0);
-  float fov = 60.0;
-
-
-  Sphere sphere = Sphere();
-  sphere.setRadius(2.0);
-  sphere.setCenter(vec3(0.0, 0.0, -16.0));
-
-  RGBApixel *red, *black;
-  red = (RGBApixel*) malloc (sizeof(RGBApixel));
-  red->Red = 255; red->Blue = 0; red->Green = 0; red->Alpha = 0;
-  black = (RGBApixel*) malloc (sizeof(RGBApixel));
-  black->Red = 0; black->Blue = 0; black->Green = 0; black->Alpha = 0;
-  BMP *myPic = new BMP();
-  myPic->SetSize(size_x, size_y);
-  int x = 0; int y = 0;
-
-
-  Sampler test_sampler(size_x, size_y, 1);
-  Camera camera(cam_lookfrom, cam_lookat, cam_up, fov, size_x / float(size_y), 1.0, 10.0);
-  vec2 sample;
-  vec3 ray;
-  while (test_sampler.getSample(sample)) {
-    //printf("sample x: %.2f,  y: %.2f\n", sample[0], sample[1]);
-    camera.generateRay(sample, ray);
-    //printf("ray (%.2f, %.2f, %.2f)\n", ray[0], ray[1], ray[2]);
-
-    if (x == size_x) {
-      y++;
-      x = 0;
-    }
-    if (sphere.intersect(camera.position(), ray)) {
-      myPic->SetPixel(x, y, *red);
-    }
-    else {
-      myPic->SetPixel(x, y, *black);
-    }
-    x++;
-  }
-
-  myPic->WriteToFile("milestone.bmp");
-  delete myPic;
-  free(red);
-  free(black);
-}
-*/
