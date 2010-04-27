@@ -18,7 +18,7 @@ public:
 	mat4 objToWorld;
 	mat4 worldToObj;
 	void setMatrix(mat4 m);
-        void setMaterial(Color diffuse, Color specular, Color emission, Color reflective, Color ambient, double shininess);
+        void setMaterial(Color diffuse, Color specular, Color emission, Color reflection, Color ambient, double shininess);
 };
 
 #endif
