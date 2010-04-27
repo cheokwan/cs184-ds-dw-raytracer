@@ -70,7 +70,7 @@ void Raytracer::trace(int reflects, vec4 p0, vec4 p1, double depth, Color *c){
 	if (minPrimIndex == -1){
 		*c = Color(0,0,0);
 	} else {
-		*c = globalAmbient + primitives.at(minPrimIndex)->ke;
+		*c = primitives.at(minPrimIndex)->ka + primitives.at(minPrimIndex)->ke;
 		for (i = 0; i < lights.size(); i++){
 			attn = 1.0/((lights.at(i)->attn)[0] + (lights.at(i)->attn)[1] * minT + (lights.at(i)->attn)[2] * minT * minT);
 			if (visible(p0 + (minT*p1), lights.at(i))){

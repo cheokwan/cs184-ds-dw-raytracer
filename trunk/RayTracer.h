@@ -16,7 +16,6 @@ class Raytracer
 public:
 	vector<Primitive*> primitives;
 	vector<Light*> lights;
-	Color globalAmbient;
 	void trace(int reflects, vec4 p0, vec4 p1, double depth, Color *color);
 	bool visible(vec4 p, Light *l);
 	Raytracer();
