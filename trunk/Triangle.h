@@ -1,5 +1,4 @@
 #include "algebra3.h"
-#include "bmp/easyBMP.h"
 #include "Primitive.h"
 
 #ifndef _Triangle_h_

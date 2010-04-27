@@ -2,5 +2,13 @@
 
 void Primitive::setMatrix(mat4 m){
 	objToWorld = m;
-	worldToObj = m;
+	worldToObj = m.inverse();
+}
+
+void Primitive::setMaterial(Color diffuse, Color specular, Color emission, Color reflective, double shininess) {
+  kd = diffuse;
+  ks = specular;
+  ke = emission;
+  kr = reflective;
+  sp = shininess;
 }

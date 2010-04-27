@@ -3,10 +3,7 @@ camera 0.0 0.0 10.0   0.0 0.0 -1.0   0.0 1.0 0.0   60.0
 maxdepth 3
 output testscene1.bmp
 
+ambient 0.1 0.1 0.1
 
-pushTransform
-scale 2.0 2.0 2.0
-translate 5.0 5.0 5.0
-popTransform
 
-scale 3.0 3.0 3.0
+sphere 0.0 0.0 -16.0   2.0
