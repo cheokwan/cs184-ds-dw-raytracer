@@ -1,5 +1,5 @@
 #include <math.h>
-#include "bmp/easyBMP.h"
+#include "bmp/EasyBMP.h"
 
 #ifndef _Color_h_
 #define _Color_h_
@@ -26,7 +26,6 @@ public:
 	Color(double r, double g, double b);
 	~Color();
 
-	friend class Color;
 };
 
 

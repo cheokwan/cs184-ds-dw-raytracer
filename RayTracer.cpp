@@ -2,49 +2,15 @@
 
 
 Raytracer::Raytracer(){
-
-	Sphere *s1 = new Sphere();
-	s1->setRadius(0.6);
-	s1->kd = Color(0.4, 0.1, 0.1);
-	s1->ks = Color(1, 1, 1);
-	s1->ke = Color(0, 0, 0);
-	s1->kr = Color(0.1, 0.1, 0.1);
-	s1->setCenter(vec4(0.2, 0.2, 5, 1));
-	s1->sp = 50.0;
-
-
-	Sphere *s2 = new Sphere();
-	s2->setRadius(0.6);
-	s2->kd = Color(0, 1, 1);
-	s2->ks = Color(1, 1, 1);
-	s2->ke = Color(0, 0, 0);
-	s2->kr = Color(0.1, 0.1, 0.1);
-	s2->sp = 50.0;
-	s2->setCenter(vec4(-0.8, -0.8, 4, 1));
-
-	
-
-	Triangle *t1 = new Triangle();
-	t1->kd = Color(0.1, 0.1, 0.1);
-	t1->ks = Color(1.0, 1.0, 1.0);
-	t1->ke = Color(0, 0, 0);
-	t1->kr = Color(0.8, 0.8, 0.8);
-	t1->sp = 50.0;
-	
-	
-	Light *l1 = new Light(-1, -1, 1, Color(1, 1, 1), 0);
-	Light *l2 = new Light(-2, -2, 3, Color(0, 0, 1), 0);
-//	l1->attn = vec3(1, 0.2, 0.08);
-
-	primitives.push_back(s1);
-	primitives.push_back(s2);
-	primitives.push_back(t1);
-	lights.push_back(l2);
-	lights.push_back(l1);
-	globalAmbient = Color(0.1, 0.1, 0.1);
 }
 
 Raytracer::~Raytracer(){
+  for (int i = 0; i < primitives.size(); i++) {
+    delete primitives[i];
+  }
+  for (int i = 0; i < lights.size(); i++) {
+    delete lights[i];
+  }
 }
 
 bool Raytracer::visible(vec4 p0, Light *l){

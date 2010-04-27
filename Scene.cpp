@@ -5,6 +5,7 @@
 #include "algebra3.h"
 #include "Sampler.h"
 #include "Camera.h"
+#include "RayTracer.h"
 #include "Film.h"
 #include "Color.h"
 #include "Sphere.h"
@@ -19,6 +20,7 @@
 class Scene {
   Sampler* sampler;
   Camera* camera;
+  Raytracer* raytracer;
   Film* film;
 
   stack<mat4> modelview;
@@ -30,6 +32,13 @@ class Scene {
   int totalvertnorms;
   int currentvert;
   int currentvertnorm;
+
+  vec3 currentatten;
+  Color currentdiffuse;
+  Color currentspecular;
+  float currentshininess;
+  Color currentemission;
+  Color currentreflect;
 
   int width;
   int height;
@@ -58,15 +67,17 @@ Scene::Scene() {
   totalvertnorms = 0;
   currentvert = 0;
   currentvertnorm = 0;
+  currentatten = vec3(1.0, 0.0, 0.0);
 }
 
 Scene::~Scene() {
   delete sampler;
   delete camera;
+  delete raytracer;
   delete film;
-  delete verts;
-  delete vertnorm_verts;
-  delete vertnorm_norms;
+  delete[] verts;
+  delete[] vertnorm_verts;
+  delete[] vertnorm_norms;
 }
 
 void Scene::parseScene(const char* inputfilename) {
@@ -97,12 +108,13 @@ bool Scene::parseCommand(string line) {
   stringstream ss(stringstream::in | stringstream::out);
   ss.str(line);
   ss >> op;
-  if (op == "#") {  // comment
+  if (op[0] == '#') {  // comment
     return true;
   }
   else if (op == "size") {
     ss >> width >> height >> samplings;
     sampler = new Sampler(width, height, samplings);
+    raytracer = new Raytracer();
     film = new Film(width, height, samplings*samplings); // samplings^2 samples per pixel
   }
   else if (op == "maxdepth") {
@@ -118,6 +130,11 @@ bool Scene::parseCommand(string line) {
     camera = new Camera(lookfrom, lookat, up, fov, height/(float)width, 1.0, 10.0);
   }
   else if (op == "sphere") {
+    float centerx, centery, centerz, radius;
+    ss >> centerx >> centery >> centerz >> radius;
+    Sphere* sphere = new Sphere(centerx, centery, centerz, radius, toptransform);
+    sphere->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflect, currentshininess);
+    (raytracer->primitives).push_back(sphere);
   }
   else if (op == "maxverts") {
     ss >> totalverts;
@@ -149,8 +166,19 @@ bool Scene::parseCommand(string line) {
     vertnorm_norms[currentvertnorm++] = norm;
   }
   else if (op == "tri") {
+    int vert1, vert2, vert3;
+    ss >> vert1 >> vert2 >> vert3;
+    Triangle* triangle = new Triangle(verts[vert1], verts[vert2], verts[vert3], toptransform);
+    triangle->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflect, currentshininess);
+    (raytracer->primitives).push_back(triangle);
   }
   else if (op == "trinormal") {
+    int vertnorm1, vertnorm2, vertnorm3;
+    ss >> vertnorm1 >> vertnorm2 >> vertnorm3;
+    Triangle* triangle = new Triangle(vertnorm_verts[vertnorm1], vertnorm_verts[vertnorm2], vertnorm_verts[vertnorm3],
+                                      vertnorm_norms[vertnorm1], vertnorm_norms[vertnorm2], vertnorm_norms[vertnorm3], toptransform);
+    triangle->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflect, currentshininess);
+    (raytracer->primitives).push_back(triangle);
   }
   else if (op == "translate") {
     vec3 tran;
@@ -194,20 +222,43 @@ bool Scene::parseCommand(string line) {
     printMat(toptransform);                   // DEBUG
   }
   else if (op == "directional") {
+    float posx, posy, posz;
+    Color rgb;
+    ss >> posx >> posy >> posz >> rgb.r >> rgb.g >> rgb.b;
+    Light* light = new Light(posx, posy, posz, rgb, 0);
+    light->attn = currentatten;
+    (raytracer->lights).push_back(light);
   }
   else if (op == "point") {
+    float posx, posy, posz;
+    Color rgb;
+    ss >> posx >> posy >> posz >> rgb.r >> rgb.g >> rgb.b;
+    Light* light = new Light(posx, posy, posz, rgb, 1);
+    light->attn = currentatten;
+    (raytracer->lights).push_back(light);
   }
   else if (op == "attenuation") {
+    ss >> currentatten[0] >> currentatten[1] >> currentatten[2];
   }
   else if (op == "ambient") {
+    Color rgb;
+    ss >> rgb.r >> rgb.g >> rgb.b;
+    raytracer->globalAmbient = rgb;
   }
   else if (op == "diffuse") {
+    ss >> currentdiffuse.r >> currentdiffuse.g >> currentdiffuse.b;
   }
   else if (op == "specular") {
+    ss >> currentspecular.r >> currentspecular.g >> currentspecular.b;
   }
   else if (op == "shininess") {
+    ss >> currentshininess;
   }
   else if (op == "emission") {
+    ss >> currentemission.r >> currentemission.g >> currentemission.b;
+  }
+  else if (op == "reflect") {
+    ss >> currentreflect.r >> currentreflect.g >> currentreflect.b;
   }
   else {
     return false;  // unknown command
@@ -223,8 +274,10 @@ void Scene::render() {
   vec2 sample;
   vec4 ray_ori;
   vec4 ray_dir;
+  Color samplecolor;
 
   // TESTING
+  /*
   Color red(1.0, 0.0, 0.0);
   Color black(0.0, 0.0, 0.0);
 
@@ -234,15 +287,21 @@ void Scene::render() {
 
   double t;
   int count = 0;
+  */
 
   while (sampler->getSample(sample)) {
     camera->generateRay(sample, ray_ori, ray_dir);
+    // TODO calculate depth (now 100.0)
+    raytracer->trace(tracedepth, ray_ori, ray_dir, 100.0, &samplecolor);
+    film->commit(samplecolor);
+    /*
     if (sphere.intersect(ray_ori, ray_dir, &t, 100.0)) {
       film->commit(red);
     }
     else {
       film->commit(black);
     }
+    */
   }
 }
 
@@ -269,9 +328,10 @@ int main(int argc, char** argv) {
     printf("usage: raytracer inputfile\n");
     exit(1);
   }
-  Scene scene;
-  scene.bootstrap(argv[1]);  // bootstrap by parsing inputfile
-  scene.render();
-  scene.outputImage();
+  Scene* scene = new Scene();
+  scene->bootstrap(argv[1]);  // bootstrap by parsing inputfile
+  scene->render();
+  scene->outputImage();
   //  scene.debugmsg();
+  delete scene;
 }
