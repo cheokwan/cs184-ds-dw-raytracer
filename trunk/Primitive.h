@@ -1,4 +1,5 @@
 #include "Color.h"
+#include "algebra3.h"
 
 #ifndef _Primitive_h_
 #define _Primitive_h_
@@ -13,6 +14,9 @@ public:
 	Color ke;
 	Color kr;
 	double sp;
+	mat4 objToWorld;
+	mat4 worldToObj;
+	void setMatrix(mat4 m);
 };
 
 #endif

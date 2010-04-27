@@ -56,5 +56,11 @@ Sphere::Sphere(){
 	radius = 3;
 }
 
+Sphere::Sphere(double x, double y, double z, double r, mat4 t){
+	center = vec4(x, y, z, 1);
+	radius = r;
+	setMatrix(t);
+}
+
 Sphere::~Sphere(){
 }

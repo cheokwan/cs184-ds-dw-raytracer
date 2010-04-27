@@ -107,11 +107,28 @@ Triangle::Triangle(){
 	interpolateNormal = false;
 }
 
-Triangle::Triangle(vec4 newNormalA, vec4 newNormalB, vec4 newNormalC){
+Triangle::Triangle(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC, vec4 newNormalA, vec4 newNormalB, vec4 newNormalC, mat4 t){
 	interpolateNormal = true;
+
+	vertexA = newVertexA;
+	vertexB = newVertexB;
+	vertexC = newVertexC;
+
 	normalA = newNormalA;
 	normalB = newNormalB;
 	normalC = newNormalC;
+
+	setMatrix(t);
+}
+
+Triangle::Triangle(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC, mat4 t){
+	interpolateNormal = true;
+
+	vertexA = newVertexA;
+	vertexB = newVertexB;
+	vertexC = newVertexC;
+
+	setMatrix(t);
 }
 
 Triangle::~Triangle(){

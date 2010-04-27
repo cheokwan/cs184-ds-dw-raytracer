@@ -17,6 +17,7 @@ public:
 	virtual bool intersect(vec4 p0, vec4 p1, double *t, double maxDistance);
 	virtual vec4 getNormal(vec4 point);
 	Sphere();
+	Sphere(double x, double y, double z, double r, mat4 t);
 	~Sphere();
 };
 
