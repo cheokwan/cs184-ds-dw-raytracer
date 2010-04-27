@@ -1,4 +1,12 @@
-size 640 480 2
+size 800 600 1
 camera 0.0 0.0 10.0   0.0 0.0 -1.0   0.0 1.0 0.0   60.0
 maxdepth 3
-output testscene1out.txt
+output testscene1.bmp
+
+
+pushTransform
+scale 2.0 2.0 2.0
+translate 5.0 5.0 5.0
+popTransform
+
+scale 3.0 3.0 3.0
