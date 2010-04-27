@@ -31,11 +31,14 @@ bool Film::commit(Color color) {
 BMP* Film::generateImage() {
   int total_pixels = width * height;
   for (int p = 0; p < total_pixels; p++) {
-    Color accum_color(0.0, 0.0, 0.0);
+    float accum_r = 0.0, accum_g = 0.0, accum_b = 0.0;
     for (int s = 0; s < depth; s++) {
-      accum_color = accum_color + color_buffer[p*depth+s];
+      accum_r += color_buffer[p*depth+s].r;
+      accum_g += color_buffer[p*depth+s].g;
+      accum_b += color_buffer[p*depth+s].b;
     }
-    image->SetPixel(p % width, p / width, accum_color.toRGBA());
+    Color color(accum_r/depth, accum_g/depth, accum_b/depth);
+    image->SetPixel(p % width, p / width, color.toRGBA());
   }
   return image;
 }

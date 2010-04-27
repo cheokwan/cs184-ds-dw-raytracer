@@ -34,11 +34,12 @@ class Scene {
   int currentvertnorm;
 
   vec3 currentatten;
+  Color currentambient;
   Color currentdiffuse;
   Color currentspecular;
   float currentshininess;
   Color currentemission;
-  Color currentreflect;
+  Color currentreflection;
 
   int width;
   int height;
@@ -127,13 +128,13 @@ bool Scene::parseCommand(string line) {
     vec3 lookfrom, lookat, up;
     float fov;
     ss >> lookfrom[0] >> lookfrom[1] >> lookfrom[2] >> lookat[0] >> lookat[1] >> lookat[2] >> up[0] >> up[1] >> up[2] >> fov;
-    camera = new Camera(lookfrom, lookat, up, fov, height/(float)width, 1.0, 10.0);
+    camera = new Camera(lookfrom, lookat, up, fov, width/(float)height, 1.0, 10.0);
   }
   else if (op == "sphere") {
     float centerx, centery, centerz, radius;
     ss >> centerx >> centery >> centerz >> radius;
     Sphere* sphere = new Sphere(centerx, centery, centerz, radius, toptransform);
-    sphere->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflect, currentshininess);
+    sphere->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflection, currentambient, currentshininess);
     (raytracer->primitives).push_back(sphere);
   }
   else if (op == "maxverts") {
@@ -149,7 +150,7 @@ bool Scene::parseCommand(string line) {
     if (currentvert >= totalverts) {
       return false;
     }
-    vec3 vert;
+    vec4 vert;
     ss >> vert[0] >> vert[1] >> vert[2];
     vert[3] = 1;
     verts[currentvert++] = vert;
@@ -158,7 +159,7 @@ bool Scene::parseCommand(string line) {
     if (currentvertnorm >= totalvertnorms) {
       return false;
     }
-    vec3 vert, norm;
+    vec4 vert, norm;
     ss >> vert[0] >> vert[1] >> vert[2] >> norm[0] >> norm[1] >> norm[2];
     vert[3] = 1;
     norm[3] = 0;
@@ -169,7 +170,7 @@ bool Scene::parseCommand(string line) {
     int vert1, vert2, vert3;
     ss >> vert1 >> vert2 >> vert3;
     Triangle* triangle = new Triangle(verts[vert1], verts[vert2], verts[vert3], toptransform);
-    triangle->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflect, currentshininess);
+    triangle->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflection, currentambient, currentshininess);
     (raytracer->primitives).push_back(triangle);
   }
   else if (op == "trinormal") {
@@ -177,7 +178,7 @@ bool Scene::parseCommand(string line) {
     ss >> vertnorm1 >> vertnorm2 >> vertnorm3;
     Triangle* triangle = new Triangle(vertnorm_verts[vertnorm1], vertnorm_verts[vertnorm2], vertnorm_verts[vertnorm3],
                                       vertnorm_norms[vertnorm1], vertnorm_norms[vertnorm2], vertnorm_norms[vertnorm3], toptransform);
-    triangle->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflect, currentshininess);
+    triangle->setMaterial(currentdiffuse, currentspecular, currentemission, currentreflection, currentambient, currentshininess);
     (raytracer->primitives).push_back(triangle);
   }
   else if (op == "translate") {
@@ -186,7 +187,7 @@ bool Scene::parseCommand(string line) {
     toptransform = toptransform * translation3D(tran);
 
     printf("translate, toptransform:\n");  // DEBUG
-    printMat(toptransform);                // DEBUG
+    matprint(toptransform);                // DEBUG
   }
   else if (op == "rotate") {
     vec3 axis;
@@ -195,7 +196,7 @@ bool Scene::parseCommand(string line) {
     toptransform = toptransform * rotation3D(axis, degree);
 
     printf("rotate, toptransform:\n");  // DEBUG
-    printMat(toptransform);             // DEBUG
+    matprint(toptransform);             // DEBUG
   }
   else if (op == "scale") {
     vec3 scale;
@@ -203,13 +204,13 @@ bool Scene::parseCommand(string line) {
     toptransform = toptransform * scaling3D(scale);
 
     printf("scale, toptransform:\n");  // DEBUG
-    printMat(toptransform);            // DEBUG
+    matprint(toptransform);            // DEBUG
   }
   else if (op == "pushTransform") {
     modelview.push(mat4(toptransform));
 
     printf("pushTransform, modelview.top():\n");  // DEBUG
-    printMat(modelview.top());                    // DEBUG
+    matprint(modelview.top());                    // DEBUG
   }
   else if (op == "popTransform") {
     if (modelview.empty()) {
@@ -219,7 +220,7 @@ bool Scene::parseCommand(string line) {
     modelview.pop();
 
     printf("popTransform, toptransform:\n");  // DEBUG
-    printMat(toptransform);                   // DEBUG
+    matprint(toptransform);                   // DEBUG
   }
   else if (op == "directional") {
     float posx, posy, posz;
@@ -241,9 +242,7 @@ bool Scene::parseCommand(string line) {
     ss >> currentatten[0] >> currentatten[1] >> currentatten[2];
   }
   else if (op == "ambient") {
-    Color rgb;
-    ss >> rgb.r >> rgb.g >> rgb.b;
-    raytracer->globalAmbient = rgb;
+    ss >> currentambient.r >> currentambient.g >> currentambient.b;
   }
   else if (op == "diffuse") {
     ss >> currentdiffuse.r >> currentdiffuse.g >> currentdiffuse.b;
@@ -257,8 +256,8 @@ bool Scene::parseCommand(string line) {
   else if (op == "emission") {
     ss >> currentemission.r >> currentemission.g >> currentemission.b;
   }
-  else if (op == "reflect") {
-    ss >> currentreflect.r >> currentreflect.g >> currentreflect.b;
+  else if (op == "reflection") {
+    ss >> currentreflection.r >> currentreflection.g >> currentreflection.b;
   }
   else {
     return false;  // unknown command
@@ -275,19 +274,6 @@ void Scene::render() {
   vec4 ray_ori;
   vec4 ray_dir;
   Color samplecolor;
-
-  // TESTING
-  /*
-  Color red(1.0, 0.0, 0.0);
-  Color black(0.0, 0.0, 0.0);
-
-  Sphere sphere;
-  sphere.setRadius(2.0);
-  sphere.setCenter(vec3(0.0, 0.0, -16.0));
-
-  double t;
-  int count = 0;
-  */
 
   while (sampler->getSample(sample)) {
     camera->generateRay(sample, ray_ori, ray_dir);
@@ -332,6 +318,6 @@ int main(int argc, char** argv) {
   scene->bootstrap(argv[1]);  // bootstrap by parsing inputfile
   scene->render();
   scene->outputImage();
-  //  scene.debugmsg();
+  //  scene->debugmsg();
   delete scene;
 }

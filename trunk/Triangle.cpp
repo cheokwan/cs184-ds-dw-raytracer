@@ -43,8 +43,7 @@ bool Triangle::intersect(vec4 p0, vec4 p1, double *t, double maxDistance){
 		*t = numer/denom;
 		if (*t < 0.00001)
 			return false;
-		q = p1 * (*t);
-			//+ p0;
+		q = p1 * (*t) + p0;
 		double a = (vec3(vertexC-vertexA, 3)^vec3(q-vertexA, 3))*snorm;
 		double b = (vec3(q-vertexA, 3)^vec3(vertexB-vertexA, 3))*snorm;
 
@@ -122,7 +121,7 @@ Triangle::Triangle(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC, vec4 newNo
 }
 
 Triangle::Triangle(vec4 newVertexA, vec4 newVertexB, vec4 newVertexC, mat4 t){
-	interpolateNormal = true;
+	interpolateNormal = false;
 
 	vertexA = newVertexA;
 	vertexB = newVertexB;

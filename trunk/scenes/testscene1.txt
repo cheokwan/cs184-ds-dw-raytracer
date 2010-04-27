@@ -1,9 +1,26 @@
 size 800 600 1
-camera 0.0 0.0 10.0   0.0 0.0 -1.0   0.0 1.0 0.0   60.0
+camera 20.0 5.0 10.0   0.0 0.0 0.0   0.0 1.0 0.0   60.0
 maxdepth 3
 output testscene1.bmp
 
+
+point 0.0 10.0 0.0   0.8 0.8 0.5
+
 ambient 0.1 0.1 0.1
+diffuse 0.1 0.1 0.1
+specular 1.0 1.0 1.0
+shininess 50.0
+reflection 0.1 0.1 0.1
+emission 0.0 0.0 0.0
+
+maxverts 3
+vertex 0.0 -3.0 3.0
+vertex 0.0 -3.0 -3.0
+vertex 0.0 3.0 3.0
 
 
-sphere 0.0 0.0 -16.0   2.0
+sphere 0.0 0.0 0.0   1.0
+sphere 0.0 0.0 -5.0   2.0
+sphere 0.0 0.0 -10.0   1.0
+
+tri 0 1 2

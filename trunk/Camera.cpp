@@ -9,7 +9,6 @@ Camera::Camera(vec3 look_from, vec3 look_at, vec3 up,
                float z_near, float z_far) {
   this->look_from = look_from;
   this->look_at = look_at;
-  this->up = up;
   this->field_of_view = field_of_view;
   this->aspect_ratio = aspect_ratio;
   this->z_near = z_near;
@@ -17,9 +16,9 @@ Camera::Camera(vec3 look_from, vec3 look_at, vec3 up,
 
   look_dir = (look_at - look_from).normalize();
   right = (look_dir ^ up).normalize();
-  up = (right ^ look_dir).normalize();
-  screen_x = tan(field_of_view) * z_near;
-  screen_y = aspect_ratio * screen_x;
+  this->up = (right ^ look_dir).normalize();
+  screen_y = tan(field_of_view/2.0 * M_PI/180.0) * z_near;
+  screen_x = aspect_ratio * screen_y;
 }
 
 Camera::~Camera() {
@@ -45,4 +44,5 @@ void Camera::debugmsg() {
   printf("Camera.lookfrom: <%.2f, %.2f, %.2f>\n", look_from[0], look_from[1], look_from[2]);
   printf("Camera.lookat:   <%.2f, %.2f, %.2f>\n", look_at[0], look_at[1], look_at[2]);
   printf("Camera.up:       <%.2f, %.2f, %.2f>\n", up[0], up[1], up[2]);
+  printf("Camera.fov:      %.2f\n", field_of_view);
 }
