@@ -226,7 +226,7 @@ bool Scene::parseCommand(string line) {
     float posx, posy, posz;
     Color rgb;
     ss >> posx >> posy >> posz >> rgb.r >> rgb.g >> rgb.b;
-    Light* light = new Light(posx, posy, posz, rgb, 0);
+    Light* light = new Light(posx, posy, posz, rgb, false);
     light->attn = currentatten;
     (raytracer->lights).push_back(light);
   }
@@ -234,7 +234,7 @@ bool Scene::parseCommand(string line) {
     float posx, posy, posz;
     Color rgb;
     ss >> posx >> posy >> posz >> rgb.r >> rgb.g >> rgb.b;
-    Light* light = new Light(posx, posy, posz, rgb, 1);
+    Light* light = new Light(posx, posy, posz, rgb, true);
     light->attn = currentatten;
     (raytracer->lights).push_back(light);
   }
@@ -278,16 +278,8 @@ void Scene::render() {
   while (sampler->getSample(sample)) {
     camera->generateRay(sample, ray_ori, ray_dir);
     // TODO calculate depth (now 100.0)
-    raytracer->trace(tracedepth, ray_ori, ray_dir, 100.0, &samplecolor);
+    raytracer->trace(tracedepth, ray_ori, ray_dir, 1000.0, &samplecolor);
     film->commit(samplecolor);
-    /*
-    if (sphere.intersect(ray_ori, ray_dir, &t, 100.0)) {
-      film->commit(red);
-    }
-    else {
-      film->commit(black);
-    }
-    */
   }
 }
 
