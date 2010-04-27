@@ -93,7 +93,7 @@ void Raytracer::trace(int reflects, vec4 p0, vec4 p1, double depth, Color *c){
 				else
 					lDirection = intersect - vec4(lights.at(i)->pos);
 
-				normal =  primitives.at(minPrimIndex)->getNormal(localntersect);
+				normal =  primitives.at(minPrimIndex)->getNormal(localIntersect);
 
 				normal[3] = 0;
 				normal = (primitives.at(minPrimIndex)->objToWorld)*normal;

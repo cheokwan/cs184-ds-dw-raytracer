@@ -186,8 +186,8 @@ bool Scene::parseCommand(string line) {
     ss >> tran[0] >> tran[1] >> tran[2];
     toptransform = toptransform * translation3D(tran);
 
-    printf("translate, toptransform:\n");  // DEBUG
-    matprint(toptransform);                // DEBUG
+    //    printf("translate, toptransform:\n");  // DEBUG
+    //    matprint(toptransform);                // DEBUG
   }
   else if (op == "rotate") {
     vec3 axis;
@@ -195,22 +195,22 @@ bool Scene::parseCommand(string line) {
     ss >> axis[0] >> axis[1] >> axis[2] >> degree;
     toptransform = toptransform * rotation3D(axis, degree);
 
-    printf("rotate, toptransform:\n");  // DEBUG
-    matprint(toptransform);             // DEBUG
+    //    printf("rotate, toptransform:\n");  // DEBUG
+    //    matprint(toptransform);             // DEBUG
   }
   else if (op == "scale") {
     vec3 scale;
     ss >> scale[0] >> scale[1] >> scale[2];
     toptransform = toptransform * scaling3D(scale);
 
-    printf("scale, toptransform:\n");  // DEBUG
-    matprint(toptransform);            // DEBUG
+    //    printf("scale, toptransform:\n");  // DEBUG
+    //    matprint(toptransform);            // DEBUG
   }
   else if (op == "pushTransform") {
     modelview.push(mat4(toptransform));
 
-    printf("pushTransform, modelview.top():\n");  // DEBUG
-    matprint(modelview.top());                    // DEBUG
+    //    printf("pushTransform, modelview.top():\n");  // DEBUG
+    //    matprint(modelview.top());                    // DEBUG
   }
   else if (op == "popTransform") {
     if (modelview.empty()) {
@@ -219,8 +219,8 @@ bool Scene::parseCommand(string line) {
     toptransform = modelview.top();
     modelview.pop();
 
-    printf("popTransform, toptransform:\n");  // DEBUG
-    matprint(toptransform);                   // DEBUG
+    //    printf("popTransform, toptransform:\n");  // DEBUG
+    //    matprint(toptransform);                   // DEBUG
   }
   else if (op == "directional") {
     float posx, posy, posz;
